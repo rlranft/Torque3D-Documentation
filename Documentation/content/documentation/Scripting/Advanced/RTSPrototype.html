@@ -174,6 +174,46 @@ datablock PlayerData(BoomBotData : DefaultPlayerData)
 <p>This gives us the ability to tell our unit where to go and let the AI class 
     handle getting it there.  It also lets us have our default player be the BoomBot 
     without having to specify it at the spawnpoint.</p>
+<p>Next, in <strong>game/scripts/server/gameCore.cs</strong> find <strong>GameCore::loadOut()</strong> and comment out all of the
+    weapons except the lurker.
+</p>
+                  <pre>
+function GameCore::loadOut(%game, %player)
+{
+   //echo (%game @"\c4 -> "@ %game.class @" -> GameCore::loadOut");
+
+   %player.clearWeaponCycle();
+   
+   //%player.setInventory(Ryder, 1);
+   //%player.setInventory(RyderClip, %player.maxInventory(RyderClip));
+   //%player.setInventory(RyderAmmo, %player.maxInventory(RyderAmmo));
+   //%player.addToWeaponCycle(Ryder);
+
+   %player.setInventory(Lurker, 1);
+   %player.setInventory(LurkerClip, %player.maxInventory(LurkerClip));
+   %player.setInventory(LurkerAmmo, %player.maxInventory(LurkerAmmo));
+   %player.addToWeaponCycle(Lurker);
+
+   //%player.setInventory(LurkerGrenadeLauncher, 1);
+   //%player.setInventory(LurkerGrenadeAmmo, %player.maxInventory(LurkerGrenadeAmmo));
+   //%player.addToWeaponCycle(LurkerGrenadeLauncher);
+
+   //%player.setInventory(ProxMine, %player.maxInventory(ProxMine));
+   //%player.addToWeaponCycle(ProxMine);
+
+   //%player.setInventory(DeployableTurret, %player.maxInventory(DeployableTurret));
+   //%player.addToWeaponCycle(DeployableTurret);
+   
+   if (%player.getDatablock().mainWeapon.image !$= "")
+   {
+      %player.mountImage(%player.getDatablock().mainWeapon.image, 0);
+   }
+   else
+   {
+      %player.mountImage(Lurker, 0);
+   }
+}                 </pre>
+<p>Now our character will spawn with only the lurker in its inventory and will equip it a
                 <br />
                 <a name="Camera_Setup" id="A1"></a>
                 <h2> <span class="mw-headline">Camera Setup</span></h2>
@@ -187,7 +227,7 @@ datablock PlayerData(BoomBotData : DefaultPlayerData)
 
 function serverCmdorbitCam(%client)
 {
-   %client.camera.setOrbitObject(%client.player, mDegToRad(20) @ "0 0", 0, 5.5, 5.5);
+   %client.camera.setOrbitObject(%client.player, mDegToRad(20) SPC "0 0", 0, 5.5, 5.5);
    %client.camera.camDist = 5.5;
    %client.camera.controlMode = "OrbitObject";
 }
@@ -202,7 +242,7 @@ function serverCmdtoggleCamMode(%client)
 {
    if(%client.camera.controlMode $= "Overhead")
    {
-      %client.camera.setOrbitObject(%client.player, mDegToRad(20) @ "0 0", 0, 5.5, 5.5);
+      %client.camera.setOrbitObject(%client.player, mDegToRad(20) SPC "0 0", 0, 5.5, 5.5);
       %client.camera.camDist = 5.5;
       %client.camera.controlMode = "OrbitObject";
    }
@@ -235,7 +275,7 @@ function serverCmdadjustCamera(%client, %adjustment)
    }
    if(%client.camera.controlMode $= "Overhead")
    {
-      %client.camera.position = VectorAdd(%client.camera.position, "0 0 " @ %adjustment);
+      %client.camera.position = VectorAdd(%client.camera.position, "0 0" SPC %adjustment);
    }
 }</pre>
 <p>Additionally, in <strong>scripts/client/default.bind.cs</strong> we&#39;ll add some 
@@ -279,7 +319,7 @@ moveMap.bind(mouse, "zaxis", mouseZoom);</pre>
                   Change this code by adding a third argument to the function call: </p>
                 <pre>%game.spawnPlayer(%client, %playerSpawnPoint, false);</pre>
                 <p><br />
-                  The function call being modified is <b>GameCore::spawnPlayer(%game, %this, %spawnPoint, %noControl)</b>, located in <b>game/core/scripts/server/gameCore.cs.</b> The last two arguments determine the location of spawning (%spawnPoint) and
+                  The function call being modified is <b>GameCore::spawnPlayer(%game, %this, %spawnPoint, %noControl)</b>, located in <b>game/scripts/server/gameCore.cs.</b> The last two arguments determine the location of spawning (%spawnPoint) and
                   whether or not the actor object controls the camera (%noControl). We need to address that next.</p>
                 <p>Immediately below the <strong>%game.spawnPlayer()</strong> function, add the following code:</p>
 <pre>
@@ -1120,7 +1160,7 @@ commandToServer('overheadCam');
                     needs a few adjustments to work.&nbsp; I&#39;m not going into resource costs or 
                     build times - call them exercises for the reader - we&#39;re just going to pop out a 
                     new friendly unit when you left-click on the burrow.</p>
-                  <p><br />First, we&#39;ll add some code to the <strong>serverCmdcheckTarget()</strong function to handle spawning.&nbsp; The 
+                  <p><br />First, we&#39;ll add some code to the <strong>serverCmdcheckTarget()</strong> function to handle spawning.  The 
                     function should look something like this:</p>
 
 <pre>function serverCmdcheckTarget(%client, %pos, %start, %ray)
@@ -1677,10 +1717,10 @@ moveMap.bindCmd( keyboard, "ctrl x", "addSelect();", "dropSelect();" );
                 </ul><br />
                 <p>You can download the completed scripts by <a href="rts_prototype_scripts.zip" class="downloads">CLICKING HERE</a>.<br />
                 <br />If you wish to download the scripts and assets in a single file, <a href="rts_prototype.zip" class="downloads">CLICK HERE</a>.</p>
-                  <p><br />A special thanks to Steve Acaster and his 
+                  <p><br />A special thanks to Michael Perry for the original RTS Prototype article and Steve Acaster for his 
                       <a href="http://www.garagegames.com/community/resources/view/20995" 
                           class="external">Tactics-Action Hybrid Game Tutorial 
-                      series</a> for saving me considerable time fiddling with the camera.</p>
+                      series</a>, which saved me considerable time fiddling with the camera.</p>
                 
                 </td>
             </tr>
@@ -1695,7 +1735,11 @@ moveMap.bindCmd( keyboard, "ctrl x", "addSelect();", "dropSelect();" );
   
   </div>
 
-</td></tr></table><div class="footer">   <a href="../../../content_welcome.html" target="">Home</a>   <a href="#">Back to Top</a></div></body>
+</td></tr>
+
+</table><div class="footer">   <a href="../../../content_welcome.html" target="">Home</a>   <a href="#">Back to Top</a></div>
+
+</body>
 <script type="text/javascript">
 
 var links = document.getElementsByTagName('a');
